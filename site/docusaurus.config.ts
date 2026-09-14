@@ -122,10 +122,8 @@ const config: Config = {
               label: 'Next',
               path: 'next',
               banner: 'unreleased',
-              // `next` duplicates 1.1 almost page-for-page and documents
-              // unreleased behaviour; keep it out of search and AI retrieval
-              // so assistants do not cite pre-release docs as current.
-              noIndex: true,
+              // Intentionally indexable: LLMs and search may see the latest
+              // unreleased docs. Only the unmaintained versions are noindexed.
             },
             '1.1': {
               label: '1.1',
@@ -209,11 +207,12 @@ const config: Config = {
           trackingID: 'G-DXJEH1ZRXX',
         },
         // The sitemap plugin already drops pages that carry a noindex robots
-        // meta (the versioned docs above). The docs patterns are belt and
-        // braces; the blog patterns drop thin listing pages (tags, pagination,
-        // archive). changefreq/priority are ignored by Google; lastmod is not.
+        // meta (the unmaintained versions above). The docs patterns are belt
+        // and braces; the blog patterns drop thin listing pages (tags,
+        // pagination, archive). changefreq/priority are ignored by Google;
+        // lastmod is not.
         sitemap: {
-          ignorePatterns: ['/docs/next/**', '/docs/1.0/**', '/docs/0.*/**', '/blog/tags/**', '/blog/page/**', '/blog/archive'],
+          ignorePatterns: ['/docs/1.0/**', '/docs/0.*/**', '/blog/tags/**', '/blog/page/**', '/blog/archive'],
           lastmod: 'date',
           changefreq: null,
           priority: null,
