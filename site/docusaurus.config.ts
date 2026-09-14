@@ -244,6 +244,11 @@ const config: Config = {
       },
       items: [
         {
+          label: 'Get Started',
+          to: '/#quickstart',
+          position: 'left',
+        },
+        {
           label: 'Docs',
           to: '/docs',
           position: 'left',
@@ -252,6 +257,11 @@ const config: Config = {
           label: 'Blog',
           to: '/blog',
           position: 'left',
+        },
+        {
+          label: 'Solutions',
+          to: '/#solutions',
+          position: 'right',
         },
         {
           label: 'Release Notes',
