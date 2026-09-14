@@ -79,6 +79,9 @@ const config: Config = {
 
   plugins: [
     './src/plugins/latestBlogsPlugin.ts',
+    // Generates /llms.txt and /llms-full.txt from the docs version served at
+    // /docs/ (lastVersion). See src/plugins/llmsTxtPlugin.ts.
+    './src/plugins/llmsTxtPlugin.ts',
   ],
 
   headTags: [
@@ -118,7 +121,11 @@ const config: Config = {
             current: {
               label: 'Next',
               path: 'next',
-              banner: 'unreleased'
+              banner: 'unreleased',
+              // `next` duplicates 1.1 almost page-for-page and documents
+              // unreleased behaviour; keep it out of search and AI retrieval
+              // so assistants do not cite pre-release docs as current.
+              noIndex: true,
             },
             '1.1': {
               label: '1.1',
@@ -128,42 +135,50 @@ const config: Config = {
             '1.0': {
               label: '1.0',
               path: '1.0',
-              banner: 'unmaintained'
+              banner: 'unmaintained',
+              noIndex: true,
             },
             '0.7': {
               label: '0.7',
               path: '0.7',
-              banner: 'unmaintained'
+              banner: 'unmaintained',
+              noIndex: true,
             },
             '0.6': {
               label: '0.6',
               path: '0.6',
-              banner: 'unmaintained'
+              banner: 'unmaintained',
+              noIndex: true,
             },
             '0.5': {
               label: '0.5',
               path: '0.5',
-              banner: 'unmaintained'
+              banner: 'unmaintained',
+              noIndex: true,
             },
             '0.4': {
               label: '0.4',
               path: '0.4',
-              banner: 'unmaintained'
+              banner: 'unmaintained',
+              noIndex: true,
             },
             '0.3': {
               label: '0.3',
               path: '0.3',
-              banner: 'unmaintained'
+              banner: 'unmaintained',
+              noIndex: true,
             },
             '0.2': {
               label: '0.2',
               path: '0.2',
-              banner: 'unmaintained'
+              banner: 'unmaintained',
+              noIndex: true,
             },
             '0.1': {
               label: '0.1',
               path: '0.1',
-              banner: 'unmaintained'
+              banner: 'unmaintained',
+              noIndex: true,
             },
           },
         },
@@ -192,6 +207,16 @@ const config: Config = {
         // replace this tracking ID (currently the Envoy AI Gateway property).
         gtag: {
           trackingID: 'G-DXJEH1ZRXX',
+        },
+        // The sitemap plugin already drops pages that carry a noindex robots
+        // meta (the versioned docs above). The docs patterns are belt and
+        // braces; the blog patterns drop thin listing pages (tags, pagination,
+        // archive). changefreq/priority are ignored by Google; lastmod is not.
+        sitemap: {
+          ignorePatterns: ['/docs/next/**', '/docs/1.0/**', '/docs/0.*/**', '/blog/tags/**', '/blog/page/**', '/blog/archive'],
+          lastmod: 'date',
+          changefreq: null,
+          priority: null,
         },
       } satisfies Preset.Options,
     ],
