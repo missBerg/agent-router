@@ -1,5 +1,6 @@
 import type { LoadContext, Plugin } from '@docusaurus/types';
 import type { DocMetadata, LoadedContent, LoadedVersion } from '@docusaurus/plugin-content-docs';
+import type { BlogContent } from '@docusaurus/plugin-content-blog';
 import * as fs from 'fs';
 import * as path from 'path';
 import matter from 'gray-matter';
@@ -7,9 +8,10 @@ import matter from 'gray-matter';
 /**
  * Writes /llms.txt (section index) and /llms-full.txt (concatenated content),
  * per https://llmstxt.org, from the docs version Docusaurus serves at /docs/
- * (`lastVersion`, currently 1.1). `next` and the unmaintained versions are
- * never included. Runs in postBuild so it can reuse the docs plugin's loaded
- * metadata (permalinks, titles, sidebar order) instead of guessing URLs.
+ * (`lastVersion`, currently 1.1) plus the blog posts, newest first. `next`
+ * and the unmaintained doc versions are never included. Runs in postBuild so
+ * it can reuse the docs/blog plugins' loaded metadata (permalinks, titles,
+ * sidebar order) instead of guessing URLs.
  */
 
 const TITLE = 'Agent Router (formerly Envoy AI Gateway)';
@@ -113,19 +115,26 @@ export default function llmsTxtPlugin(context: LoadContext): Plugin {
     name: 'docusaurus-plugin-llms-txt',
 
     async postBuild({ plugins, outDir }) {
-      const docsPlugin = plugins.find((p) => p.name === 'docusaurus-plugin-content-docs' && p.options.id === 'default');
-      const version = (docsPlugin?.content as LoadedContent | undefined)?.loadedVersions.find((v) => v.isLast);
+      const content = (name: string) => plugins.find((p) => p.name === name && p.options.id === 'default')?.content;
+      const version = (content('docusaurus-plugin-content-docs') as LoadedContent | undefined)?.loadedVersions.find((v) => v.isLast);
       if (!version) throw new Error('[llms-txt] could not find the docs version served at /docs/');
+      const posts = ((content('docusaurus-plugin-content-blog') as BlogContent | undefined)?.blogPosts ?? []).filter((p) => !p.metadata.unlisted);
 
       const base = context.siteConfig.url.replace(/\/$/, '');
       const header = `# ${TITLE}\n\n> ${DESCRIPTION}\n\n${INTRO}\n`;
       const sections = new Map<string, string[]>();
       const full: string[] = [];
-      for (const { section, doc } of orderedDocs(version)) {
-        const url = base + doc.permalink;
-        const md = toMarkdown(path.join(context.siteDir, doc.source.replace(/^@site\//, '')));
-        sections.set(section, [...(sections.get(section) ?? []), `- [${doc.title}](${url}): ${summarize(md)}`]);
-        full.push(`\n---\n\n# ${doc.title}\n\nSource: ${url}\n\n${md}\n`);
+      const add = (section: string, title: string, permalink: string, source: string, meta = '', description?: string) => {
+        const url = base + permalink;
+        // Root-relative links/images (/docs/..., /img/...) become absolute.
+        const md = toMarkdown(path.join(context.siteDir, source.replace(/^@site\//, ''))).replace(/\]\(\/(?!\/)/g, `](${base}/`);
+        sections.set(section, [...(sections.get(section) ?? []), `- [${title}](${url}): ${description || summarize(md)}`]);
+        full.push(`\n---\n\n# ${title}\n\nSource: ${url}\n${meta}\n${md}\n`);
+      };
+      for (const { section, doc } of orderedDocs(version)) add(section, doc.title, doc.permalink, doc.source);
+      // Blog posts are already sorted newest first by the blog plugin.
+      for (const { metadata: m } of posts) {
+        add('Blog', m.title, m.permalink, m.source, `Date: ${m.date.toISOString().slice(0, 10)}\n`, m.description);
       }
       const index = [...sections].map(([label, items]) => `\n## ${label}\n\n${items.join('\n')}\n`).join('');
       fs.writeFileSync(path.join(outDir, 'llms.txt'), header + index);
