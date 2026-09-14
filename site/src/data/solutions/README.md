@@ -5,7 +5,7 @@ section of the homepage: commercial products, managed services, and
 distributions that are built on top of Agent Router.
 
 This is separate from [adopters](../adopters/README.md). Adopters are
-organizations that *run* Agent Router; solutions are products that *package*
+organizations that _run_ Agent Router; solutions are products that _package_
 it for others.
 
 ## Adding Your Solution
