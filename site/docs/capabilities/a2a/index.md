@@ -328,11 +328,10 @@ To try a newer Envoy Proxy before Envoy Gateway ships it, override the proxy ima
 
 ## Limitations
 
-- **Alpha filter, unknown security posture.** Envoy marks the A2A filter alpha and its API work-in-progress; both the config and the behaviour may change between Envoy releases.
-- **A2A 1.0 method names are not fully modelled yet.** The filter's per-method extraction rules use the A2A 0.3 names (`message/send`, `tasks/get`, ...). Requests from 1.0 clients (`SendMessage`, `GetTask`, ...) are still validated and their `method` and `id` are logged, but `taskId` and `contextId` are only extracted for 0.3 traffic. Envoy follow-ups are tracked in proposal 013.
-- **`parser_config` and `storage_mode` are accepted but ignored** by the current filter implementation. Do not set them.
-- **Body size limit applies in both modes.** A request whose JSON-RPC envelope cannot be completed within `max_request_body_size` gets a 413 even in `PASS_THROUGH`. For 0.3 clients the parser walks the whole `params.message.parts` array, so inline file parts must fit under the limit.
-- **`REJECT` is for JSON-RPC-only listeners.** The gRPC and HTTP+JSON bindings do not carry JSON-RPC envelopes and would be answered with 400. Route those with `GRPCRoute` / plain `HTTPRoute` on a listener without the filter.
-- **One card per hostname.** The well-known path is host-rooted. Put each agent on its own hostname, or skip the `agent-card` rule for agents discovered through a registry.
-- **No card rewriting, no aggregation.** Use the static card above, or configure the agent with its public URL.
-- **`aigw run` (standalone) is not covered** by this page.
+These reflect the filter as shipped in Envoy 1.39 and will shrink as Envoy and Agent Router evolve. Check [Keeping up with Envoy](#keeping-up-with-envoy) for what your proxy version supports.
+
+- **A2A 1.0 method names are only partly modelled.** The filter validates every request and logs `method` and `id`, but `taskId` and `contextId` extraction currently keys on the A2A 0.3 names (`message/send`, `tasks/get`, ...).
+- **`parser_config` and `storage_mode` are accepted but not yet wired up.** Leave them unset until a release note says otherwise.
+- **`max_request_body_size` applies in both modes.** A JSON-RPC envelope that is not complete within the limit gets a 413 even in `PASS_THROUGH`.
+- **`REJECT` suits JSON-RPC-only listeners.** Route the gRPC and HTTP+JSON bindings on a listener without the filter.
+- **Agent cards are served as-is, one per hostname.** URL rewriting, aggregation and `aigw run` support are part of the first-class A2A work in [issue #2070](https://github.com/theagentrouter/agent-router/issues/2070).
