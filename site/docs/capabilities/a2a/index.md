@@ -309,6 +309,23 @@ If the A2A route must share a listener with other traffic, insert the filter **d
 
 With this in place the filter parses bodies on the `rpc` route only: a 1.5 MiB non-A2A body sent to another `HTTPRoute` on the same listener is forwarded, while the same body on `/a2a` gets a 413. Rule indexes follow the order of `rules` in the `HTTPRoute`, so keep the patch and the route in the same file. Confirm the result with `kubectl get envoypatchpolicy` (both conditions `True`) and the Envoy admin `config_dump`. This bookkeeping is exactly what a native `A2ARoute` will remove.
 
+## Keeping up with Envoy
+
+The `EnvoyPatchPolicy` above is plain Envoy configuration, so as the A2A filter grows you can amend the `typed_config` yourself without waiting for an Agent Router release. Check these sources against the Envoy version your gateway actually runs:
+
+- [A2A filter configuration overview](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/a2a_filter) and the [A2A proto API reference](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/a2a/v3/a2a.proto), which lists every field the filter accepts. Replace `latest` in the URL with your version, for example `v1.39.1`, to see exactly what your proxy supports.
+- [Envoy release notes](https://www.envoyproxy.io/docs/envoy/latest/version_history/version_history) for `a2a` entries in new releases, and the [filter source](https://github.com/envoyproxy/envoy/tree/main/source/extensions/filters/http/a2a) for behaviour that has not been documented yet.
+- [Envoy Gateway compatibility matrix](https://gateway.envoyproxy.io/news/releases/matrix/) to see which Envoy Proxy version each Envoy Gateway release ships, and the [EnvoyPatchPolicy task](https://gateway.envoyproxy.io/docs/tasks/extensibility/envoy-patch-policy/) for the xDS resource names the patch must target, which change when the `XDSNameSchemeV2` runtime flag is on.
+
+To find the running version, read the image tag of the proxy pod:
+
+```shell
+kubectl get pods -n envoy-gateway-system -l gateway.envoyproxy.io/owning-gateway-name=a2a-gateway \
+  -o jsonpath='{.items[0].spec.containers[?(@.name=="envoy")].image}{"\n"}'
+```
+
+To try a newer Envoy Proxy before Envoy Gateway ships it, override the proxy image in the `EnvoyProxy` resource as described in [Customize EnvoyProxy](https://gateway.envoyproxy.io/docs/tasks/operations/customize-envoyproxy/). Keep in mind that the A2A filter is alpha, so its config and behaviour can change between releases; re-read the release notes before bumping.
+
 ## Limitations
 
 - **Alpha filter, unknown security posture.** Envoy marks the A2A filter alpha and its API work-in-progress; both the config and the behaviour may change between Envoy releases.
