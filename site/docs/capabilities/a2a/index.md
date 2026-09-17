@@ -5,7 +5,7 @@ sidebar_position: 9
 ---
 
 :::caution Preview
-Agent Router does not yet have a dedicated A2A route type. This page shows how to route [A2A](https://a2a-protocol.org/) agents through the gateway **today**, using only Envoy Gateway resources plus the `envoy.filters.http.a2a` filter that ships inside Envoy Proxy. The filter is alpha in Envoy and the recipe relies on `EnvoyPatchPolicy`, so treat this as a preview. A first-class `A2ARoute` API is being discussed in [issue #2070](https://github.com/theagentrouter/agent-router/issues/2070). The steps below were verified on 2026-09-16 with Envoy Gateway v1.9.0 (Envoy 1.39.0), Agent Router v1.1.0 and Kubernetes 1.32 on kind.
+Agent Router does not yet have a dedicated A2A route type. This page shows how to route [A2A](https://a2a-protocol.org/) agents through the gateway **today**, using only Envoy Gateway resources plus the `envoy.filters.http.a2a` filter that ships inside Envoy Proxy. The filter is alpha in Envoy and the recipe relies on `EnvoyPatchPolicy`, so treat this as a preview. A first-class `A2ARoute` API is being discussed in [issue #2070](https://github.com/theagentrouter/agent-router/issues/2070).
 :::
 
 :::info Help shape A2A support
@@ -27,7 +27,7 @@ What you do **not** get yet: aggregation of several agents behind one card, rewr
 ## Prerequisites
 
 - Agent Router installed following [Prerequisites](../../getting-started/prerequisites.md). The Envoy Gateway values file used there already sets `extensionApis.enableEnvoyPatchPolicy: true`.
-- Envoy Gateway v1.8 or newer. The A2A filter exists since Envoy Proxy v1.38.0, which Envoy Gateway v1.8 ships; v1.9 ships Envoy 1.39. On an older proxy image the patched listener is rejected by Envoy, which takes every route on that listener down, so check the image before you start.
+- Envoy Gateway v1.8 or newer. The A2A filter exists since Envoy Proxy v1.38.0, which Envoy Gateway v1.8 is the first release to ship; see the [compatibility matrix](https://gateway.envoyproxy.io/news/releases/matrix/) for later pairings. On an older proxy image the patched listener is rejected by Envoy, which takes every route on that listener down, so check the image before you start.
 - An A2A agent speaking the JSON-RPC binding. The example below assumes it runs as `Service/research-agent` on port 8080 in namespace `default`.
 
 :::warning
@@ -313,7 +313,7 @@ With this in place the filter parses bodies on the `rpc` route only: a 1.5 MiB n
 
 The `EnvoyPatchPolicy` above is plain Envoy configuration, so as the A2A filter grows you can amend the `typed_config` yourself without waiting for an Agent Router release. Check these sources against the Envoy version your gateway actually runs:
 
-- [A2A filter configuration overview](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/a2a_filter) and the [A2A proto API reference](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/a2a/v3/a2a.proto), which lists every field the filter accepts. Replace `latest` in the URL with your version, for example `v1.39.1`, to see exactly what your proxy supports.
+- [A2A filter configuration overview](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/a2a_filter) and the [A2A proto API reference](https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/filters/http/a2a/v3/a2a.proto), which lists every field the filter accepts. Replace `latest` in the URL with your proxy's version tag, for example `v1.38.0`, to see exactly what your proxy supports.
 - [Envoy release notes](https://www.envoyproxy.io/docs/envoy/latest/version_history/version_history) for `a2a` entries in new releases, and the [filter source](https://github.com/envoyproxy/envoy/tree/main/source/extensions/filters/http/a2a) for behaviour that has not been documented yet.
 - [Envoy Gateway compatibility matrix](https://gateway.envoyproxy.io/news/releases/matrix/) to see which Envoy Proxy version each Envoy Gateway release ships, and the [EnvoyPatchPolicy task](https://gateway.envoyproxy.io/docs/tasks/extensibility/envoy-patch-policy/) for the xDS resource names the patch must target, which change when the `XDSNameSchemeV2` runtime flag is on.
 
@@ -328,7 +328,7 @@ To try a newer Envoy Proxy before Envoy Gateway ships it, override the proxy ima
 
 ## Limitations
 
-These reflect the filter as shipped in Envoy 1.39 and will shrink as Envoy and Agent Router evolve. Check [Keeping up with Envoy](#keeping-up-with-envoy) for what your proxy version supports.
+These reflect the filter as it ships today and will shrink as Envoy and Agent Router evolve. Check [Keeping up with Envoy](#keeping-up-with-envoy) for what your proxy version supports.
 
 - **A2A 1.0 method names are only partly modelled.** The filter validates every request and logs `method` and `id`, but `taskId` and `contextId` extraction currently keys on the A2A 0.3 names (`message/send`, `tasks/get`, ...).
 - **`parser_config` and `storage_mode` are accepted but not yet wired up.** Leave them unset until a release note says otherwise.
