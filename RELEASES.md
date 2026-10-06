@@ -77,7 +77,7 @@ Each non-patch release should start with Release Candidate (RC) phase as follows
    The release candidate should always be cut from the main branch.
 
 2. Prepare the docs site with the new version:
-   
+
    ```
    cd site
    npm run docusaurus docs:version 0.50
