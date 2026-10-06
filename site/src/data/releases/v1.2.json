@@ -162,7 +162,11 @@
       "bugFixes": [
         {
           "title": "Credential rotation no longer serves stale tokens",
-          "description": "Fixes a v1.1.0 regression: the controller read backend credential Secrets from its informer cache, so a rotated credential could miss the filter config and upstream calls failed until the next reconcile. Secrets are read from the API server again."
+          "description": "Fixes a v1.1.0 regression: the controller read backend credential Secrets from its informer cache, so a rotated credential could miss the filter config and upstream calls failed until the next reconcile. Secrets are read from the API server again. Credential changes in a <code>BackendSecurityPolicy</code> that targets an <code>InferencePool</code> now also reach the Gateway's filter config."
+        },
+        {
+          "title": "Revoking a ReferenceGrant takes effect immediately",
+          "description": "Deleting a ReferenceGrant, or removing a <code>from</code> entry, now reconciles the affected <code>AIGatewayRoute</code>s (including <code>InferencePool</code> backends) and <code>BackendSecurityPolicy</code>s (including OIDC client secrets). Access they relied on used to stay in place until an unrelated reconcile."
         },
         {
           "title": "Gateways with TCP or TLS listeners translate again",
@@ -236,11 +240,15 @@
         },
         {
           "title": "Cross-namespace Secrets in <code>BackendSecurityPolicy</code> need a ReferenceGrant",
-          "description": "<code>azureCredentials.clientSecretRef</code>, <code>gcpCredentials.credentialsFile.secretRef</code>, and the OIDC <code>clientSecret</code> under AWS, Azure, and GCP <code>oidcExchangeToken</code> were read from other namespaces without any check. A missing grant now sets the policy to NotAccepted. Already-issued tokens keep working until they expire, so the failure may appear late. Create a ReferenceGrant in the Secret's namespace (see Upgrade Guidance)."
+          "description": "<code>azureCredentials.clientSecretRef</code>, <code>gcpCredentials.credentialsFile.secretRef</code>, and the OIDC <code>clientSecret</code> under AWS, Azure, and GCP <code>oidcExchangeToken</code> were read from other namespaces without any check. The <code>secretRef</code> of <code>apiKey</code>, <code>azureAPIKey</code>, <code>anthropicAPIKey</code>, and <code>awsCredentials.credentialsFile</code> ignored its namespace, so a cross-namespace reference failed or silently used a Secret with the same name from the policy's own namespace. All of these now honor the namespace, and a missing grant sets the policy to NotAccepted. Already-issued tokens keep working until they expire, so the failure may appear late. Create a ReferenceGrant in the Secret's namespace (see Upgrade Guidance)."
         },
         {
           "title": "Ungranted cross-namespace backends no longer reach the data plane",
           "description": "An <code>AIGatewayRoute</code> <code>backendRef</code> to an <code>AIServiceBackend</code> or <code>InferencePool</code> in another namespace without a ReferenceGrant already marked the route NotAccepted, but its credentials were still written to the external processor's config. Such backends are now left out. Working setups already have the grant; this affects only routes that were already NotAccepted."
+        },
+        {
+          "title": "ReferenceGrant <code>to.name</code> is now enforced",
+          "description": "A ReferenceGrant <code>to</code> entry that sets <code>name</code> used to authorize every object of that group and kind in its namespace. It now authorizes only the named object. References to other objects, such as another Secret, <code>AIServiceBackend</code>, or <code>InferencePool</code>, are NotAccepted and left out of the data plane. Check grants that set <code>name</code> before upgrading."
         },
         {
           "title": "Per-tenant token limits are now enforced",
