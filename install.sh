@@ -162,11 +162,16 @@ mkdir -p "$INSTALL_DIR" || fail "cannot create ${INSTALL_DIR}. Set AIGW_INSTALL_
 
 # ---- Download -----------------------------------------------------------------------------------
 
-TMP_DIR=$(mktemp -d)
-trap 'rm -rf "$TMP_DIR"' EXIT INT TERM
+# Download next to the destination: the final rename is then atomic, and a small tmpfs /tmp cannot
+# run out of space on a ~300 MB file. The EXIT trap removes the partial file on any failure, and the
+# signal traps route Ctrl-C and termination through it.
+TMP_FILE=$(mktemp "${INSTALL_DIR}/.${BINARY}.XXXXXX")
+trap 'rm -f "$TMP_FILE"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 info "Downloading ${ASSET} ${TAG} (this is a ~300 MB binary, it can take a minute)..."
-http_download "${DOWNLOAD_BASE}/${ASSET}" "${TMP_DIR}/${BINARY}" ||
+http_download "${DOWNLOAD_BASE}/${ASSET}" "$TMP_FILE" ||
   fail "failed to download ${DOWNLOAD_BASE}/${ASSET}
 Check that release ${TAG} exists and publishes a ${ASSET} asset: https://github.com/${REPO}/releases"
 
@@ -201,7 +206,7 @@ if [ -z "$EXPECTED_SHA256" ]; then
 elif [ -z "$SHA256_CMD" ]; then
   warn "neither sha256sum nor shasum is installed; skipping checksum verification."
 else
-  ACTUAL_SHA256=$($SHA256_CMD "${TMP_DIR}/${BINARY}" | awk '{ print $1 }')
+  ACTUAL_SHA256=$($SHA256_CMD "$TMP_FILE" | awk '{ print $1 }')
   if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
     fail "checksum mismatch for ${ASSET} ${TAG}
   expected: ${EXPECTED_SHA256}
@@ -218,9 +223,10 @@ if [ -e "${INSTALL_DIR}/${BINARY}" ]; then
   info "Replacing the existing ${INSTALL_DIR}/${BINARY}${PREVIOUS:+ (${PREVIOUS})}."
 fi
 
-chmod +x "${TMP_DIR}/${BINARY}"
-# mv rather than cp: replacing the directory entry also works while the old binary is running.
-mv -f "${TMP_DIR}/${BINARY}" "${INSTALL_DIR}/${BINARY}"
+# mktemp creates the file as 0600, so set the mode explicitly rather than just adding +x.
+chmod 755 "$TMP_FILE"
+# Rename rather than copy: it is atomic on the same filesystem and works while the old binary is running.
+mv -f "$TMP_FILE" "${INSTALL_DIR}/${BINARY}"
 
 info "Installed ${INSTALL_DIR}/${BINARY}: $("${INSTALL_DIR}/${BINARY}" version)"
 
