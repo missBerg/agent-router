@@ -10,10 +10,10 @@ The quickest way to get `aigw` is the install script. It downloads the latest re
 verifies its checksum, and installs it to `~/.local/bin`:
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/envoyproxy/ai-gateway/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/theagentrouter/agent-router/main/install.sh | sh
 ```
 
-The same script is also served from `https://aigateway.envoyproxy.io/install.sh`.
+The same script is also served from `https://theagentrouter.ai/install.sh`.
 
 Then run the gateway locally with your provider credentials, for example for the [OpenAI provider](../getting-started/connect-providers/openai.md):
 
@@ -32,7 +32,7 @@ The script honors the following environment variables:
 For example, to pin a version and install it somewhere else:
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/envoyproxy/ai-gateway/main/install.sh | AIGW_VERSION=v1.1.0 AIGW_INSTALL_DIR=/usr/local/bin sh
+curl -fsSL https://raw.githubusercontent.com/theagentrouter/agent-router/main/install.sh | AIGW_VERSION=v1.1.0 AIGW_INSTALL_DIR=/usr/local/bin sh
 ```
 
 Re-running the script replaces the installed binary, which is how you upgrade.
@@ -58,7 +58,7 @@ The install script fails with a clear message on Intel Macs and points to the Do
 
 Each release includes the binaries for the `aigw` CLI build for different platforms.<br/>
 They can be downloaded directly from the corresponding release in the
-[GitHub releases page](https://github.com/envoyproxy/ai-gateway/releases).
+[GitHub releases page](https://github.com/theagentrouter/agent-router/releases).
 Newer releases also include a `checksums.txt` file with the SHA-256 checksum of every binary, which the install script verifies against.
 
 ## Using the Docker image
@@ -81,8 +81,8 @@ docker run --rm -p 1975:1975 -e OPENAI_API_KEY=OPENAI_API_KEY envoyproxy/ai-gate
 To use the latest version, you can use the following commands to clone the repo and build the CLI:
 
 ```shell
-git clone https://github.com/envoyproxy/ai-gateway.git
-cd ai-gateway
+git clone https://github.com/theagentrouter/agent-router.git
+cd agent-router
 go install ./cmd/aigw
 ```
 

@@ -13,13 +13,6 @@ base = "site/"
 publish = "build/"
 command = "npm run build"
 
-# Stable, brandable URL for the aigw one-command installer: `curl -fsSL https://aigateway.envoyproxy.io/install.sh | sh`.
-# Update the target once if the repository moves.
-[[redirects]]
-  from = "/install.sh"
-  to = "https://raw.githubusercontent.com/envoyproxy/ai-gateway/main/install.sh"
-  status = 301
-
 [[headers]]
   for = "/*"
   [headers.values]
@@ -27,3 +20,38 @@ command = "npm run build"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+# Redirect the whole aigateway.envoyproxy.io domain to theagentrouter.ai.
+# Matching on the full host means deploy previews (*.netlify.app) are unaffected.
+# force = true is required because Docusaurus publishes real files at these paths,
+# and Netlify would otherwise serve them instead of applying the redirect.
+[[redirects]]
+  from = "https://aigateway.envoyproxy.io/*"
+  to = "https://theagentrouter.ai/:splat"
+  status = 301
+  force = true
+
+# Old docs URLs of the form /docs/latest/<page> → current docs.
+[[redirects]]
+  from = "/docs/latest/*"
+  to = "/docs/:splat"
+  status = 301
+
+# Stable URL for the aigw one-command installer: `curl -fsSL https://theagentrouter.ai/install.sh | sh`.
+# Update the target once if the repository moves again.
+[[redirects]]
+  from = "/install.sh"
+  to = "https://raw.githubusercontent.com/theagentrouter/agent-router/main/install.sh"
+  status = 301
+
+# Self-hosted brand fonts and hashed build assets are immutable.
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

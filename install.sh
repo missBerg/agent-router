@@ -4,10 +4,10 @@
 # The full text of the Apache license is available in the LICENSE file at
 # the root of the repo.
 
-# Installs the Envoy AI Gateway CLI (aigw) from GitHub Releases.
+# Installs the Agent Router CLI (aigw, formerly Envoy AI Gateway) from GitHub Releases.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/envoyproxy/ai-gateway/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/theagentrouter/agent-router/main/install.sh | sh
 #
 # Environment variables:
 #   AIGW_VERSION      Release to install, e.g. "v1.1.0" or "1.1.0". Defaults to the latest release.
@@ -26,7 +26,7 @@
 
 set -eu
 
-REPO="envoyproxy/ai-gateway"
+REPO="theagentrouter/agent-router"
 BINARY="aigw"
 DOCKER_CMD="docker run --rm -p 1975:1975 -e OPENAI_API_KEY=... envoyproxy/ai-gateway-cli run"
 
